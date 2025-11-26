@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personalized Lock Screen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Warna Dasar (Biru Pastel) */
+        :root {
+            --primary-blue: #D0E4F4;
+            --light-blue: #F0F8FF;
+            --dark-blue: #A9CCE3;
+            --text-color: #3C5A77;
+        }
+
+        /* Body dan Container */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--light-blue);
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+        }
+
+        /* --- LAYOUT UTAMA --- */
+        .card, .main-content {
+            width: 650px;
+            min-height: 450px;
+            background-color: var(--primary-blue);
+            border-radius: 25px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        /* --- LOCK SCREEN (KARTU PIN) --- */
+        .card {
+            display: flex;
+            height: 450px;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background-color: var(--dark-blue);
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+        }
+
+        .photo-area { flex: 1; display: flex; justify-content: center; align-items: center; margin-top: 40px; z-index: 1; }
+        .profile-photo { width: 250px; height: 250px; border-radius: 50%; object-fit: cover; border: 5px solid white; box-shadow: 0 0 0 3px var(--dark-blue); }
+        .pin-area { flex: 1; display: flex; flex-direction: column; align-items: center; padding-top: 40px; z-index: 1; }
+        .pin-input { width: 80%; height: 40px; margin-bottom: 20px; border: none; background-color: var(--light-blue); border-radius: 10px; text-align: center; font-size: 24px; color: var(--text-color); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); pointer-events: none; }
+        
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 250px; }
+        .key { background-color: var(--dark-blue); color: var(--light-blue); border: none; padding: 20px 0; font-size: 20px; border-radius: 10px; cursor: pointer; transition: background-color 0.1s; box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1); }
+        .key:hover { background-color: var(--primary-blue); border: 1px solid var(--text-color); color: var(--text-color); }
+        .clear-key { grid-column: 1 / span 1; }
+        .zero-key { grid-column: 2 / span 1; }
+        .delete-key { grid-column: 3 / span 1; }
+        
+        /* --- FOOTER KONSISTEN --- */
+        .footer { text-align: center; margin-top: 20px; color: var(--text-color); }
+        .footer p { margin: 0; font-size: 14px; }
+        .signature { font-family: 'Dancing Script', cursive; font-size: 40px; font-weight: 700; margin: 5px 0 0 0; color: var(--text-color); }
+
+        /* --- MAIN CONTENT (BIRTHDAY PAGE & PROFILE PAGE) --- */
+        .main-content {
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            padding-bottom: 30px; 
+            min-height: 550px;
+            position: relative;
+        }
+        
+        .main-content > .footer {
+            margin-top: auto; 
+            padding-top: 20px;
+        }
+
+        .main-content .header-bar {
+            width: calc(100% - 60px); 
+            height: 50px;
+            background-color: var(--dark-blue);
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            margin-top: -30px; 
+            color: var(--light-blue);
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* --- IMAGE & OVERLAY TEXT (BIRTHDAY PAGE) --- */
+        .main-content .image-container {
+            width: 100%;
+            height: 300px;
+            border-radius: 15px;
+            overflow: hidden; 
+            margin-bottom: 20px;
+            position: relative;
+            background-color: transparent; 
+        }
+
+        .main-content .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; 
+            display: block;
+            border-radius: 15px; 
+        }
+        
+        @keyframes slideInFade {
+            0% { opacity: 0; transform: translate(-100%, 0); }
+            100% { opacity: 1; transform: translate(0, 0); }
+        }
+
+        .main-content .overlay-text {
+            position: absolute;
+            top: 20px; 
+            left: 20px; 
+            transform: translate(0, 0); 
+            color: white; 
+            font-size: 24px; 
+            font-weight: bold;
+            text-align: left; 
+            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+            width: auto; 
+            padding: 0; 
+            opacity: 0; 
+            animation: slideInFade 1.5s ease-out 0.5s forwards; 
+        }
+
+        /* --- BUTTON GROUP --- */
+        .button-group {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 25px;
+        }
+
+        .action-button {
+            background-color: var(--dark-blue);
+            color: var(--light-blue);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .action-button:hover {
+            background-color: var(--primary-blue);
+            color: var(--text-color);
+        }
+        .action-button i {
+            font-size: 20px;
+        }
+
+        /* --- PROFILE CARD STYLING --- */
+        .profile-card {
+            display: flex;
+            width: 100%;
+            padding: 20px;
+            background-color: var(--primary-blue);
+            border-radius: 15px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .profile-photo-container {
+            flex-shrink: 0; 
+            width: 150px;
+            height: 150px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-right: 20px;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--dark-blue);
+        }
+
+        .profile-photo-small {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .profile-text {
+            flex-grow: 1;
+            color: var(--text-color);
+            font-size: 15px;
+            line-height: 1.5;
+            padding-top: 5px;
+            text-align: left;
+        }
+
+        .profile-text p {
+            margin: 0;
+        }
+        
+        /* --- SPOTIFY & MILESTONES STYLING --- */
+        .spotify-link-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 30px; 
+            margin-bottom: 20px;
+        }
+
+        .spotify-link {
+            display: inline-flex;
+            align-items: center;
+            background-color: #1DB954; 
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 50px; 
+            font-weight: bold;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            gap: 10px;
+        }
+
+        .spotify-link:hover {
+            background-color: #1AA34A;
+        }
+
+        .spotify-link i {
+            font-size: 20px;
+        }
+
+        .milestones {
+            width: 100%;
+            margin-top: 40px; 
+            padding: 10px 0;
+            color: var(--text-color);
+        }
+
+        .milestones h3 {
+            text-align: center;
+            color: var(--dark-blue);
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .milestones ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .milestones li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            background-color: var(--light-blue);
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .milestones li i {
+            color: var(--dark-blue);
+        }
+
+        /* --- STYLING PHOTO GRID (MEMORIES POP-UP) --- */
+        .photo-grid-container {
+            display: none; 
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); 
+            z-index: 20; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .photo-grid {
+            width: 90%; 
+            max-width: 200px; 
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .photo-grid img {
+            width: 100%;
+            height: auto; 
+            object-fit: contain;
+            border-radius: 5px;
+            display: block;
+        }
+        
+        .photo-grid-container p {
+            color: white !important; 
+        }
+        
+        .close-grid-button {
+            background-color: #f44336; 
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+        .close-grid-button:hover {
+            background-color: #d32f2f;
+        }
+        
+        /* --- STYLING BARU UNTUK READ ME (AMPLOP & SURAT POP-UP) --- */
+
+        /* Container untuk Amplop dan Tombol Open Me */
+        .read-me-section {
+            display: none; /* Awalnya tersembunyi */
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            padding: 10px;
+            width: 100%;
+            background-color: var(--light-blue);
+            border-radius: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .read-me-section img {
+            width: 150px; /* Sesuaikan ukuran amplop */
+            height: auto;
+            margin-bottom: 15px;
+        }
+        
+        /* Tombol Open Me */
+        .open-me-button {
+            background-color: #f44336; /* Warna merah untuk menonjol */
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+            transition: background-color 0.2s;
+        }
+
+        .open-me-button:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Pop-up Surat */
+        .letter-popup-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 30; /* Lebih tinggi dari pop-up memori */
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .letter-popup {
+            width: 90%;
+            max-width: 400px; /* Ukuran maksimal surat */
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+            position: relative;
+            max-height: 90vh; /* Agar bisa digulir jika terlalu panjang */
+            overflow-y: auto;
+        }
+
+        .letter-popup img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .close-letter-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--dark-blue);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 31; /* Pastikan di atas gambar surat */
+        }
+
+    </style>
+</head>
+<body>
+    
+    <div id="lock-screen" class="container">
+        <div class="card">
+            <div class="photo-area">
+                <img src="kyoo.jpg" alt="Couple Photo" class="profile-photo">
+            </div>
+            
+            <div class="pin-area">
+                <input type="password" id="pin-input" class="pin-input" maxlength="4" readonly>
+                
+                <div class="keypad">
+                    <button class="key clear-key">C</button>
+                    <button class="key">1</button>
+                    <button class="key">2</button>
+                    <button class="key">3</button>
+                    <button class="key">4</button>
+                    <button class="key">5</button>
+                    <button class="key">6</button>
+                    <button class="key">7</button>
+                    <button class="key">8</button>
+                    <button class="key">9</button>
+                    <button class="key zero-key">0</button>
+                    <button class="key delete-key">DEL</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Made With Love</p>
+            <h1 class="signature">Your Meu</h1>
+        </div>
+    </div>
+
+    <div id="main-content" class="main-content">
+        <div class="header-bar">
+            happy birthday!
+        </div>
+        <div class="image-container">
+            <img src="jarak.jpg" alt="Happy Birthday">
+            
+            <div id="overlay-text" class="overlay-text">
+                hi, kyoo<3<br>
+                Wishing you a day filled with<br>
+                love, joy, and all the things that<br>
+                make you happiest ❤️
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="profile-btn" class="action-button"><i class="fas fa-user"></i> Profile</button>
+            <button id="memories-btn" class="action-button"><i class="fas fa-camera"></i> Memories</button>
+            <button id="read-me-btn" class="action-button"><i class="fas fa-book-open"></i> Read Me</button>
+        </div>
+        
+        <div id="read-me-section" class="read-me-section">
+            <img src="Desain tanpa judul.jpg" alt="Sealed Letter">
+            <button id="open-me-btn" class="open-me-button">
+                Open Me <i class="fas fa-envelope-open-text"></i>
+            </button>
+        </div>
+        <div class="footer">
+            <p>made with love</p>
+            <h1 class="signature" style="font-size: 30px;">Your Meu</h1>
+        </div>
+    </div>
+
+    <div id="profile-content" class="main-content">
+        <div class="header-bar">
+            a little about u
+        </div>
+
+        <div class="profile-card">
+            <div class="profile-photo-container">
+                <img src="profile.jpg" alt="Profile Photo" class="profile-photo-small">
+            </div>
+            <div class="profile-text">
+                <p>
+                    He was the most intelligent dream chaser I've ever met. A man full of ambition and determination, always knowing what he was aiming for in everything he did. His own happiness was paramount to him, and every step he took was driven by his conviction to improve.
+                </p>
+            </div>
+        </div>
+        
+        <div class="spotify-link-container">
+            <a href="https://open.spotify.com/playlist/3Ghj5qXa6vY41KnA8GzqtL?si=5ce1ffc00d7d4b45" target="_blank" class="spotify-link">
+                <i class="fab fa-spotify"></i> This song for you
+            </a>
+        </div>
+
+        <button id="back-to-main" class="action-button" style="margin-top: 30px;">
+            <i class="fas fa-arrow-left"></i> Back to Birthday Page
+        </button>
+        
+        <div class="footer">
+            <p>made with love</p>
+            <h1 class="signature" style="font-size: 30px;">Your Meu</h1>
+        </div>
+    </div>
+    
+    <div id="photo-grid-container" class="photo-grid-container">
+        <div class="photo-grid">
+            <img src="memories.png" alt="Photo Full">
+        </div>
+        <p style="text-align: center; color: white; margin-top: 15px;">Our beautiful collection.</p>
+        <button id="close-grid-btn" class="close-grid-button">Close</button> 
+    </div>
+
+    <div id="letter-popup-container" class="letter-popup-container">
+        <div class="letter-popup">
+            <button id="close-letter-btn" class="close-letter-button"><i class="fas fa-times"></i></button>
+            <img src="Beige Vintage Newspaper Poster.jpg" alt="Birthday Letter">
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
